@@ -6,16 +6,14 @@ Created on Tue Jul 11 15:00:01 2023
 @author: dennismou
 """
 
-print("Hello this is my chess file") 
-print()
+print("Hello, this is my chess file.") 
 
 # in the terminal, navigate to the correct directory. 
 # git add file_name.py IF it is a new file
+# git status
 # git commit -m "my message here"
 # git push
 
-#from defs import *
-#from printing import *
 
 
 whites = {'King': u'\u2654','Queen':u'\u2655',
@@ -28,13 +26,15 @@ alph = {'a':0,'b':1,'c':2,'d':3,
         'e':4,'f':5,'g':6,'h':7}
 
 board_dim = 8
+board_design = "◻️"
 
 def init_board():
     # r = []
     # c = []
     # for i in range(board_dim):
     #     r.append("_")
-    b = [["◻️" for j in range(board_dim)] for _ in range(board_dim)]
+    b = [[board_design for j in range(board_dim)] for _ in range(board_dim)]
+    
     for k in range(board_dim):
         b[1][k] = blacks['Pawn']
         b[6][k] = whites['Pawn']
@@ -70,45 +70,171 @@ def print_board(board):
 
 def main():
     board = init_board()
+    t=0
     player_turn = "Whites"
-    t = 0
+    
     while True:
-        t += 1
+        
         print()
         print(player_turn,"Turn!")
         print_board(board)
         print()
-        board = move_piece(board)
+        board = move_piece(board, player_turn)
         if check_vic(board) == None:
             pass
         else:
             print(check_vic(board))
             print_board(board)
             break
-        
+        t += 1
         if player_turn == "Whites":
             player_turn = "Blacks"
         else:
             player_turn = "Whites"
+        
 
-def move_piece(board):
+def move_piece(board, player_turn):
     s_letter = str(input("Enter the Column of Start: "))
     s_num = 8 - int(input("Enter the Row of Start: "))
+    print()
+    correct_pick(board,player_turn,s_letter,s_num)
+    
     f_letter = str(input("Enter the Column of Finish: "))
     f_num = 8 - int(input("Enter the Row of Finish: "))
+    if s_letter == f_letter and s_num == f_num:
+        print("You need to make a move ... LOL")
+        print()
+        return move_piece(board, player_turn)
     print()
+    fdly_fire(board,player_turn,s_letter,s_num,f_letter,f_num)
+    
+    p = board[s_num][alph[s_letter]]
+    if p == '♔' or p == '♚':
+        # King
+        king(board, player_turn, s_letter, s_num, f_letter, f_num)
+    elif p == '♕' or p == '♕':
+        # Queen
+        queen(board, player_turn, s_letter, s_num, f_letter, f_num)
+    elif p == '♖' or p == '♜':
+        # Rook
+        rook(board, player_turn, s_letter, s_num, f_letter, f_num)
+    elif p == '♗' or p == '♝':
+        #  Bishop
+        bishop(board, player_turn, s_letter, s_num, f_letter, f_num)
+    elif p == '♘' or p == '♘':
+        # Knight
+        pass
+    elif p == '♟' or p == '♙':
+        # Pawn
+        pass
+    else:
+        pass
+    
+    board[f_num][alph[f_letter]] = board[s_num][alph[s_letter]]
+    board[s_num][alph[s_letter]] = board_design
+    return board
+
+def correct_pick(board,player_turn,s_letter,s_num):
+    if player_turn == "Whites" \
+        and board[s_num][alph[s_letter]] in blacks.values():
+        print("Wrong Piece: You are Whites.")
+        return move_piece(board, player_turn)
+    elif player_turn == "Blacks" \
+            and board[s_num][alph[s_letter]] in whites.values():
+        print("Wrong Piece: You are Blacks.")
+        return move_piece(board, player_turn)
+    else:
+        pass
+
+def fdly_fire(board,player_turn,s_letter,s_num,f_letter,f_num):
     if board[s_num][alph[s_letter]] in whites.values() \
             and board[f_num][alph[f_letter]] in whites.values():
-        print("Invalid Move! Try again ...")
-        return move_piece(board)
+        print("Invalid Move: Cannot take your own piece.")
+        return move_piece(board, player_turn)
     elif board[s_num][alph[s_letter]] in blacks.values() \
             and board[f_num][alph[f_letter]] in blacks.values():
-        print("Invalid Move! Try again ...")
-        return move_piece(board)
+        print("Invalid Move: Cannot take your own piece.")
+        return move_piece(board, player_turn)
     else:
-        board[f_num][alph[f_letter]] = board[s_num][alph[s_letter]]
-        board[s_num][alph[s_letter]] = "◻️"
-        return board
+        pass
+
+def king(board, player_turn,s_letter,s_num,f_letter,f_num):
+    """ King moves one square in any direction."""
+    a = abs(s_num - f_num)
+    b = abs(alph.get(s_letter) - alph.get(f_letter))
+    if a > 1 or b > 1:
+        print("Invalid Move: King moves one square.")
+        return move_piece(board, player_turn)
+
+def queen(board, player_turn,s_letter,s_num,f_letter,f_num):
+    """ Queen moves in a file or rank or diagonlly but it cannot leap."""
+    d1 = abs(s_num - f_num)
+    d2 = abs(alph.get(s_letter) - alph.get(f_letter))
+    d3 = min(s_num,f_num)
+    d4 = max(s_num,f_num)
+    d5 = min(alph.get(s_letter),alph.get(f_letter))
+    d6 = max(alph.get(s_letter),alph.get(f_letter))
+    d7 = min(s_num,f_num)
+    d8 = max(s_num,f_num)
+    r = d1 / d2
+
+    if r == 1 or r == 0:
+        pass
+    elif 1/r == 0:
+        pass
+    else:
+        print("Invalid Move: Queen moves a file, rank or diagonlly.")
+        return move_piece(board, player_turn)
+    if d1 == d2:
+        for i in range(d3+1,d4):
+            if board[i][i] != board_design:
+                print("Invalid Move: Queen cannot leap.")
+                return move_piece(board, player_turn)
+    elif s_num == f_num:
+        for i in range(d5+1,d6):
+            if board[s_num][i] != board_design:
+                print("Invalid Move: Queen cannot leap.")
+                return move_piece(board, player_turn)
+    elif s_letter == f_letter:
+        for i in range(d7+1,d8):
+            if board[i][alph.get(s_letter)] != board_design:
+                print("Invalid Move: Queen cannot leap.")
+                return move_piece(board, player_turn)
+
+def rook(board, player_turn,s_letter,s_num,f_letter,f_num):
+    """Rook moves in single file or rank, but it cannot leap."""
+    if s_num != f_num and s_letter != f_letter:
+        print("Invalid Move: Rook moves in a file or rank.")
+        return move_piece(board, player_turn)
+    elif s_num == f_num:
+        a = min(alph.get(s_letter),alph.get(f_letter))
+        b = max(alph.get(s_letter),alph.get(f_letter))
+        for i in range(a+1,b):
+            if board[s_num][i] != board_design:
+                print("Invalid Move: Rook cannot leap.")
+                return move_piece(board, player_turn)
+    elif s_letter == f_letter:
+        a = min(s_num,f_num)
+        b = max(s_num,f_num)
+        for i in range(a+1,b):
+            if board[i][alph.get(s_letter)] != board_design:
+                print("Invalid Move: Rook cannot leap.")
+                return move_piece(board, player_turn)
+
+def bishop(board, player_turn, s_letter, s_num, f_letter, f_num):
+    """Bishop moves diagonally and cannot leap."""
+    a = abs(s_num - f_num)
+    b = abs(alph.get(s_letter) - alph.get(f_letter))
+    c = min(s_num,f_num)
+    d = max(s_num,f_num)
+    if a != b:
+        print("Invalid Move: Bishop moves diagonally.")
+        return move_piece(board, player_turn)
+    else:
+        for i in range(c+1,d):
+            if board[i][i] != board_design:
+                print("Invalid Move: Bishop cannot leap.")
+                return move_piece(board, player_turn)
 
 def check_vic(board):
     c_1 = 0
@@ -116,7 +242,6 @@ def check_vic(board):
     for i in board:
         if whites['King'] in i:
             c_1 += 1
-            
         if blacks['King'] in i:
             c_2 += 1
 
